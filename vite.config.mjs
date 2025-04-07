@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import rollupNodePolyFill from 'rollup-plugin-node-polyfills';
 
 // Get __dirname equivalent in an ES module
 const __filename = fileURLToPath(import.meta.url);
