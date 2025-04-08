@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 /**
  * Main Application Logic - Simplified Version
  * This file contains the main functionality for the Pokemon Card Flip App
@@ -17,6 +18,17 @@ let cards = [];
 // Debug flag - set to true to simulate slower loading
 const DEBUG_SHOW_SPINNER = false;
 const LOADING_DELAY = 4000; // 2 seconds delay
+
+//handling card selection
+let firstSelectedCard = null;
+let secondSelectedCard = null;
+
+//Flag to prevent interaction while processing
+let isProcessingPair = false;
+
+// state tracking
+let matched = 0;
+const TOTAL_PAIRS = 6;
 
 /**
  * Initialize the application
@@ -112,7 +124,15 @@ function createCardElement(index) {
 async function fetchAndAssignPokemon() {
   try {
     // Fetch multiple random Pokemon
-    const pokemonList = await PokemonService.fetchMultipleRandomPokemon(CARD_COUNT);
+    const pokemonList = await PokemonService.fetchMultipleRandomPokemon(CARD_COUNT / 2);
+    //CARD_COUND / 2 = 6 Create 6 instead of 12
+
+    const copy = [...pokemonList]; // copying the original array
+
+    const All = pokemonList.concat(copy); // merging
+
+    // To shuffle pairs
+    const ShufflePairs = ShuffleArray(All);
 
     // If debug flag is on, add artificial delay to show the spinner
     if (DEBUG_SHOW_SPINNER) {
@@ -121,11 +141,27 @@ async function fetchAndAssignPokemon() {
 
     // Assign Pokemon to cards
     for (let i = 0; i < CARD_COUNT; i++) {
-      assignPokemonToCard(cards[i], pokemonList[i]);
+      assignPokemonToCard(cards[i], ShufflePairs[i]);
     }
   } catch (error) {
     console.error('Error fetching and assigning Pokemon:', error);
   }
+}
+
+function ShuffleArray(array) {
+  //copying main array
+  const arraycopy = structuredClone(array);
+
+  // shuffling with Fisher-yates algorytm
+  for (let i = arraycopy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+
+    [arraycopy[i], arraycopy[j]] = [arraycopy[j], arraycopy[i]];
+  }
+
+  //returning
+  return arraycopy;
+
 }
 
 /**
@@ -221,10 +257,83 @@ function handleCardClick(event) {
     return;
   }
 
+  //pair porcessing
+  if (card.classList.contains('flipped') || card.classList.contains('matched')) {
+    return; // Already flipped or matched
+  }
+
+  if (isProcessingPair) {
+    return;
+  }
+
   // Toggle card flip
-  card.classList.toggle('flipped');
+  card.classList.add('flipped');
+
+  //Selection track logic
+  if (!firstSelectedCard) {
+    //selecting the first
+    firstSelectedCard = card;
+  } else {
+    //selecting the second
+    secondSelectedCard = card;
+    isProcessingPair = true;
+
+    //setting values
+    const val1 = firstSelectedCard.dataset.pokemon;
+    const val2 = secondSelectedCard.dataset.pokemon;
+
+    if (val1 === val2) {
+      // match found
+      firstSelectedCard.classList.add('matched');
+      secondSelectedCard.classList.add('matched');
+      // increment matched pairs
+      matched += 1;
+      //check pairs completed
+      checkGameCompletion();
+      //reset selection
+      resetSelection();
+    } else {
+      //no match, timeout 1s
+      setTimeout(() => {
+        firstSelectedCard.classList.remove('flipped');
+        secondSelectedCard.classList.remove('flipped');
+        resetSelection();
+      }, 1000);
+    }
+  }
 }
 
+function resetSelection() {
+  firstSelectedCard = null;
+  secondSelectedCard = null;
+  isProcessingPair = false;
+}
+
+function checkGameCompletion() {
+  if (matched === TOTAL_PAIRS) {
+    showGameComplete();
+  }
+}
+
+function showGameComplete() {
+  const messageContainer = document.createElement('div');
+  messageContainer.classList.add('completion-message');
+
+  messageContainer.innerHTML = `
+  <h1>Congratulations Player</h1>
+  <p> You found all Pokemon Pairs </p>
+  <button id="play-again">Play Again </button>
+  `;
+
+  document.querySelector('.container').appendChild(messageContainer);
+
+  //reset game
+  document.getElementById('play-again').addEventListener('click', () => {
+    messageContainer.remove();
+    matched = 0;
+    initApp(); //important to reset game.
+  });
+}
 /**
  * Set up event listeners
  *
