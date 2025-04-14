@@ -228,21 +228,104 @@ function assignPokemonToCard(card, pokemon) {
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Event | MDN: Event}
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Element/classList | MDN: classList}
  */
+let firstSelectedCard = null;
+let secondSelectedCard = null;
+let isProcessingPair = false;
+
 function handleCardClick(event) {
-  // Find the clicked card
-  let card = event.target;
-  while (card && !card.classList.contains('card')) {
-    card = card.parentElement;
+  // Find the clicked card using closest for better performance and readability
+  const card = event.target.closest('.card');
+
+  // Early return pattern for better readability
+  if (!card) {
+    return; // Not a card or child of card
   }
 
-  if (!card) {
+  // TODO: Add selection logic
+  // Guard clauses for better readability
+  if (card.classList.contains('flipped') || card.classList.contains('matched')) {
+    return; // Already flipped or matched
+  }
+
+  // Check if we're currently processing a pair (prevent clicking during timeout)
+  if (isProcessingPair) {
     return;
   }
 
-  // Toggle card flip
-  card.classList.toggle('flipped');
+  // Flip the card
+  card.classList.add('flipped');
+
+  // TODO: Implement selection tracking
+  if (!firstSelectedCard) {
+    firstSelectedCard = card;
+  } else if (!secondSelectedCard && card !== firstSelectedCard) {
+    secondSelectedCard = card;
+    isProcessingPair = true;
+    checkForMatch();
+  }
 }
 
+function checkForMatch() {
+  // Get Pokémon data from both cards with error handling
+  let firstPokemonData, secondPokemonData;
+
+  try {
+    firstPokemonData = JSON.parse(firstSelectedCard.dataset.pokemon);
+    secondPokemonData = JSON.parse(secondSelectedCard.dataset.pokemon);
+  } catch (error) {
+    console.error('Error parsing Pokémon data:', error);
+    resetSelection();
+    return;
+  }
+
+  // Guard clause if either data is missing
+  if (!firstPokemonData || !secondPokemonData) {
+    console.error('Missing Pokémon data');
+    resetSelection();
+    return;
+  }
+
+  // TODO: Compare Pokémon and handle match/non-match cases
+  // Use a constant time comparison with strict equality
+  // Your code here to compare Pokémon IDs and handle the result
+  if (firstPokemonData.id === secondPokemonData.id) {
+    handleMatch();
+  } else {
+    handleNonMatch();
+  }
+}
+
+// TODO: Implement match handling
+function handleMatch() {
+  firstSelectedCard.classList.add('matched');
+  secondSelectedCard.classList.add('matched');
+
+  resetSelection();
+}
+
+// TODO: Implement non-match handling
+function handleNonMatch() {
+  isProcessingPair = true;
+
+  return new Promise(resolve => {
+    setTimeout(() => {
+      firstSelectedCard.classList.remove('flipped');
+      secondSelectedCard.classList.remove('flipped');
+
+      resetSelection();
+      isProcessingPair = false;
+
+      resolve();
+    }, 1000);
+  });
+}
+
+// TODO: Implement selection reset
+function resetSelection() {
+  firstSelectedCard = null;
+  secondSelectedCard = null;
+  isProcessingPair = false;
+}
 /**
  * Set up event listeners
  *
