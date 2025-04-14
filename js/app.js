@@ -223,7 +223,6 @@ let isProcessingPair = false;
 
 function handleCardClick(event) {
   const card = event.target.closest('.card');
-
   if (!card) return;
   if (card.classList.contains('flipped') || card.classList.contains('matched')) return;
   if (isProcessingPair) return;
@@ -232,32 +231,50 @@ function handleCardClick(event) {
 
   if (!firstSelectedCard) {
     firstSelectedCard = card;
-  }
-  else if (!secondSelectedCard) {
+  } else if (firstSelectedCard !== card && !secondSelectedCard) {
     secondSelectedCard = card;
-
     isProcessingPair = true;
-
-    const firstPokemon = JSON.parse(firstSelectedCard.dataset.pokemon);
-    const secondPokemon = JSON.parse(secondSelectedCard.dataset.pokemon);
-
-    const firstId = firstPokemon.id;
-    const secondId = secondPokemon.id;
-
-    if (firstId === secondId) {
-      firstSelectedCard.classList.add('matched');
-      secondSelectedCard.classList.add('matched');
-
-      resetSelection();
-    }
-    else {
-      setTimeout(() => {
-        firstSelectedCard.classList.remove('flipped');
-        secondSelectedCard.classList.remove('flipped');
-        resetSelection();
-      }, 1000);
-    }
+    checkForMatch();
   }
+}
+
+function checkForMatch() {
+  let firstPokemonData, secondPokemonData;
+
+  try {
+    firstPokemonData = JSON.parse(firstSelectedCard.dataset.pokemon);
+    secondPokemonData = JSON.parse(secondSelectedCard.dataset.pokemon);
+  } catch (error) {
+    console.error('Error parsing Pokémon data:', error);
+    resetSelection();
+    return;
+  }
+
+  if (!firstPokemonData || !secondPokemonData) {
+    console.error('Missing Pokémon data');
+    resetSelection();
+    return;
+  }
+
+  if (firstPokemonData.id === secondPokemonData.id) {
+    handleMatch();
+  } else {
+    handleNonMatch();
+  }
+}
+
+function handleMatch() {
+  firstSelectedCard.classList.add('matched');
+  secondSelectedCard.classList.add('matched');
+  resetSelection();
+}
+
+function handleNonMatch() {
+  setTimeout(() => {
+    firstSelectedCard.classList.remove('flipped');
+    secondSelectedCard.classList.remove('flipped');
+    resetSelection();
+  }, 1000);
 }
 
 function resetSelection() {
@@ -265,7 +282,6 @@ function resetSelection() {
   secondSelectedCard = null;
   isProcessingPair = false;
 }
-
 
 /**
  * Set up event listeners
