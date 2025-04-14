@@ -217,20 +217,55 @@ function assignPokemonToCard(card, pokemon) {
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Event | MDN: Event}
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Element/classList | MDN: classList}
  */
+let firstSelectedCard = null;
+let secondSelectedCard = null;
+let isProcessingPair = false;
+
 function handleCardClick(event) {
-  // Find the clicked card
-  let card = event.target;
-  while (card && !card.classList.contains('card')) {
-    card = card.parentElement;
-  }
+  const card = event.target.closest('.card');
 
-  if (!card) {
-    return;
-  }
+  if (!card) return;
+  if (card.classList.contains('flipped') || card.classList.contains('matched')) return;
+  if (isProcessingPair) return;
 
-  // Toggle card flip
-  card.classList.toggle('flipped');
+  card.classList.add('flipped');
+
+  if (!firstSelectedCard) {
+    firstSelectedCard = card;
+  }
+  else if (!secondSelectedCard) {
+    secondSelectedCard = card;
+
+    isProcessingPair = true;
+
+    const firstPokemon = JSON.parse(firstSelectedCard.dataset.pokemon);
+    const secondPokemon = JSON.parse(secondSelectedCard.dataset.pokemon);
+
+    const firstId = firstPokemon.id;
+    const secondId = secondPokemon.id;
+
+    if (firstId === secondId) {
+      firstSelectedCard.classList.add('matched');
+      secondSelectedCard.classList.add('matched');
+
+      resetSelection();
+    }
+    else {
+      setTimeout(() => {
+        firstSelectedCard.classList.remove('flipped');
+        secondSelectedCard.classList.remove('flipped');
+        resetSelection();
+      }, 1000);
+    }
+  }
 }
+
+function resetSelection() {
+  firstSelectedCard = null;
+  secondSelectedCard = null;
+  isProcessingPair = false;
+}
+
 
 /**
  * Set up event listeners
