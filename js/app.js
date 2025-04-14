@@ -111,22 +111,29 @@ function createCardElement(index) {
  */
 async function fetchAndAssignPokemon() {
   try {
-    // Fetch multiple random Pokemon
-    const pokemonList = await PokemonService.fetchMultipleRandomPokemon(CARD_COUNT);
+    const pokemonList = await PokemonService.fetchMultipleRandomPokemon(6);
+    const pokemonPairs = pokemonList.flatMap(pokemon => [pokemon, { ...pokemon }]);
+    const shuffledPairs = shuffleArray(pokemonPairs);
 
-    // If debug flag is on, add artificial delay to show the spinner
-    if (DEBUG_SHOW_SPINNER) {
-      await new Promise(resolve => setTimeout(resolve, LOADING_DELAY));
-    }
-
-    // Assign Pokemon to cards
-    for (let i = 0; i < CARD_COUNT; i++) {
-      assignPokemonToCard(cards[i], pokemonList[i]);
+    for (let i = 0; i < Math.min(CARD_COUNT, shuffledPairs.length); i++) {
+      if (cards[i] && shuffledPairs[i]) {
+        assignPokemonToCard(cards[i], shuffledPairs[i]);
+      }
     }
   } catch (error) {
-    console.error('Error fetching and assigning Pokemon:', error);
+    console.error('Error fetching and assigning Pokémon:', error);
   }
 }
+
+function shuffleArray(array) {
+  const arrayCopy = structuredClone(array);
+  for (let i = arrayCopy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arrayCopy[i], arrayCopy[j]] = [arrayCopy[j], arrayCopy[i]];
+  }
+  return arrayCopy;
+}
+
 
 /**
  * Assign a Pokemon to a card
