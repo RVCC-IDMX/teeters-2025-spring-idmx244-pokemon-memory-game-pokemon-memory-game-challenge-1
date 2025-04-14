@@ -231,7 +231,8 @@ function handleCardClick(event) {
 
   if (!firstSelectedCard) {
     firstSelectedCard = card;
-  } else if (firstSelectedCard !== card && !secondSelectedCard) {
+  }
+  else if (firstSelectedCard !== card && !secondSelectedCard) {
     secondSelectedCard = card;
     isProcessingPair = true;
     checkForMatch();
@@ -267,6 +268,11 @@ function handleMatch() {
   firstSelectedCard.classList.add('matched');
   secondSelectedCard.classList.add('matched');
   resetSelection();
+
+  const matchedCards = document.querySelectorAll('.card.matched');
+  if (matchedCards.length === CARD_COUNT) {
+    showGameComplete();
+  }
 }
 
 function handleNonMatch() {
@@ -281,6 +287,35 @@ function resetSelection() {
   firstSelectedCard = null;
   secondSelectedCard = null;
   isProcessingPair = false;
+}
+
+function showGameComplete() {
+  const messageContainer = document.createElement('div');
+  messageContainer.classList.add('completion-message');
+
+  messageContainer.innerHTML = `
+    <div class="message-box">
+      <h2>Congratulations!</h2>
+      <p>You found all the Pokémon pairs!</p>
+      <button id="play-again">Play Again</button>
+    </div>
+  `;
+
+  document.querySelector('.container').appendChild(messageContainer);
+
+  document.getElementById('play-again').addEventListener('click', () => {
+    messageContainer.remove();
+    resetGame();
+  });
+}
+
+function resetGame() {
+  firstSelectedCard = null;
+  secondSelectedCard = null;
+  isProcessingPair = false;
+
+  createCardElements();
+  fetchAndAssignPokemon();
 }
 
 /**
