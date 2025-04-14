@@ -125,6 +125,7 @@ async function fetchAndAssignPokemon() {
   }
 }
 
+// Shuffle copied array of pokemon cards
 function shuffleArray(array) {
   const arrayCopy = structuredClone(array);
   for (let i = arrayCopy.length - 1; i > 0; i--) {
@@ -239,6 +240,7 @@ function handleCardClick(event) {
   }
 }
 
+// Check if cards match and handles if they do/ dont
 function checkForMatch() {
   let firstPokemonData, secondPokemonData;
 
@@ -264,6 +266,7 @@ function checkForMatch() {
   }
 }
 
+// If cards match add class and check if game is complete
 function handleMatch() {
   firstSelectedCard.classList.add('matched');
   secondSelectedCard.classList.add('matched');
@@ -289,6 +292,7 @@ function resetSelection() {
   isProcessingPair = false;
 }
 
+// Builds end screen and shows to user once everything is matched
 function showGameComplete() {
   const messageContainer = document.createElement('div');
   messageContainer.classList.add('completion-message');
@@ -309,6 +313,7 @@ function showGameComplete() {
   });
 }
 
+// Resets the game and grabs new pokemon
 function resetGame() {
   firstSelectedCard = null;
   secondSelectedCard = null;
