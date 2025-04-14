@@ -210,19 +210,70 @@ function assignPokemonToCard(card, pokemon) {
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Event | MDN: Event}
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Element/classList | MDN: classList}
  */
-function handleCardClick(event) {
-  // Find the clicked card
-  let card = event.target;
-  while (card && !card.classList.contains('card')) {
-    card = card.parentElement;
-  }
+let firstSelectedCard = null;
+let secondSelectedCard = null;
+let isProcessingPair = false;
 
-  if (!card) {
+function handleCardClick(event) {
+  const card = event.target.closest('.card');
+  if (!card) return;
+  if (card.classList.contains('flipped') || card.classList.contains('matched')) return;
+  if (isProcessingPair) return;
+
+  card.classList.add('flipped');
+
+  if (!firstSelectedCard) {
+    firstSelectedCard = card;
+  } else if (firstSelectedCard !== card && !secondSelectedCard) {
+    secondSelectedCard = card;
+    isProcessingPair = true;
+    checkForMatch();
+  }
+}
+
+function checkForMatch() {
+  let firstPokemonData, secondPokemonData;
+
+  try {
+    firstPokemonData = JSON.parse(firstSelectedCard.dataset.pokemon);
+    secondPokemonData = JSON.parse(secondSelectedCard.dataset.pokemon);
+  } catch (error) {
+    console.error('Error parsing Pokémon data:', error);
+    resetSelection();
     return;
   }
 
-  // Toggle card flip
-  card.classList.toggle('flipped');
+  if (!firstPokemonData || !secondPokemonData) {
+    console.error('Missing Pokémon data');
+    resetSelection();
+    return;
+  }
+
+  if (firstPokemonData.id === secondPokemonData.id) {
+    handleMatch();
+  } else {
+    handleNonMatch();
+  }
+}
+
+function handleMatch() {
+  firstSelectedCard.classList.add('matched');
+  secondSelectedCard.classList.add('matched');
+  resetSelection();
+}
+
+function handleNonMatch() {
+  setTimeout(() => {
+    firstSelectedCard.classList.remove('flipped');
+    secondSelectedCard.classList.remove('flipped');
+    resetSelection();
+  }, 1000);
+}
+
+function resetSelection() {
+  firstSelectedCard = null;
+  secondSelectedCard = null;
+  isProcessingPair = false;
 }
 
 /**
